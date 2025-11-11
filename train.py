@@ -141,7 +141,7 @@ def train_func(config):
         # Report metrics and checkpoint
         checkpoint = None
         if train.get_context().get_world_rank() == 0:
-            checkpoint = train.torch.TorchCheckpoint.from_model(model)
+            checkpoint = train.torch.TorchCheckpoint.from_state_dict(model.state_dict())
 
         train.report(
             metrics={
@@ -160,13 +160,31 @@ def train_func(config):
 def main():
     """Main function to setup and run Ray Train."""
 
+    # Configure S3/Minio settings
+    os.environ["AWS_ACCESS_KEY_ID"] = "minioadmin"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"
+    os.environ["AWS_ENDPOINT_URL"] = "https://minio.minio.svc.cluster.local:9000"
+    os.environ["AWS_S3_VERIFY_SSL"] = "false"
+
+    # For s3fs (used by Ray for S3 storage)
+    os.environ["S3_ENDPOINT_URL"] = "https://minio.minio.svc.cluster.local:9000"
+
     # Initialize Ray
     ray.init(
         runtime_env={
             "pip": [
-                "torch==2.1.0",
-                "torchvision==0.16.0"
-            ]
+                "torch==2.9.0",
+                "torchvision==0.24.0",
+                "boto3",
+                "s3fs"
+            ],
+            "env_vars": {
+                "AWS_ACCESS_KEY_ID": "minioadmin",
+                "AWS_SECRET_ACCESS_KEY": "minioadmin",
+                "AWS_ENDPOINT_URL": "https://minio.minio.svc.cluster.local:9000",
+                "AWS_S3_VERIFY_SSL": "false",
+                "S3_ENDPOINT_URL": "https://minio.minio.svc.cluster.local:9000"
+            }
         }
     )
 
@@ -182,7 +200,7 @@ def main():
 
     run_config = RunConfig(
         name="fashion_mnist_train",
-        storage_path="/tmp/ray_results",
+        storage_path="s3://checkpoints/",
         checkpoint_config=CheckpointConfig(
             num_to_keep=2,
             checkpoint_score_attribute="test_acc",
