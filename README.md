@@ -1,15 +1,11 @@
-# Ray Train on Kubernetes with KubeRay
+# Ray Train on Crusoe Managed Kubernetes with KubeRay
 
-This project demonstrates how to run distributed PyTorch training using Ray Train on Kubernetes via the KubeRay operator.
-
-## Overview
-
-The example trains a CNN on the Fashion MNIST dataset using distributed training across multiple Ray workers.
+This example runs distributed PyTorch training using Ray Train on Crusoe Managed Kubernetes via the KubeRay operator. Checkpoints are stored in object storage.
 
 ### Components
 
 - `train.py` - Python script implementing distributed training with Ray Train
-- `Dockerfile` - Container image for the training workload
+- `Dockerfile` - To build a Ray image for the training workload
 - `rayjob-train.yaml` - Kubernetes manifest for deploying the RayJob
 
 ## Prerequisites
@@ -23,10 +19,11 @@ The example trains a CNN on the Fashion MNIST dataset using distributed training
 ### Option 1: Deploy Using ConfigMap (Easiest)
 
 This option embeds the training script in a ConfigMap, so you don't need to build or push a Docker image.
+This is a good way to test and develop your training code over multiple iterations, because the ConfigMap containing the Python code can be easily edited.
 
 ```bash
 # Deploy the RayJob
-kubectl apply -f rayjob-train.yaml
+kubectl apply -f rayjob-train-cm.yaml
 
 # Monitor the job status
 kubectl get rayjob raytrain-fashion-mnist -w
