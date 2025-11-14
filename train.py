@@ -1,8 +1,3 @@
-"""
-Ray Train example for distributed PyTorch training on Kubernetes.
-This example trains a simple neural network on the Fashion MNIST dataset.
-"""
-
 import os
 import torch
 import torch.nn as nn
@@ -94,7 +89,9 @@ def train_func(config):
     test_loader = train.torch.prepare_data_loader(test_loader)
 
     # Training loop
+    print("Starting the training loop!")
     for epoch in range(epochs):
+        print(f"Starting on epoch {epoch}")
         model.train()
         train_loss = 0.0
         train_correct = 0
@@ -163,38 +160,21 @@ def main():
     # Configure S3/Minio settings
     os.environ["AWS_ACCESS_KEY_ID"] = "minioadmin"
     os.environ["AWS_SECRET_ACCESS_KEY"] = "minioadmin"
-    os.environ["AWS_ENDPOINT_URL"] = "https://minio.minio.svc.cluster.local:9000"
-    os.environ["AWS_S3_VERIFY_SSL"] = "false"
+    os.environ["AWS_ENDPOINT_URL"] = "http://minio.minio.svc.cluster.local:9000"
 
     # For s3fs (used by Ray for S3 storage)
-    os.environ["S3_ENDPOINT_URL"] = "https://minio.minio.svc.cluster.local:9000"
+    os.environ["S3_ENDPOINT_URL"] = "http://minio.minio.svc.cluster.local:9000"
 
     # Initialize Ray
-    ray.init(
-        runtime_env={
-            "pip": [
-                "torch==2.9.0",
-                "torchvision==0.24.0",
-                "boto3",
-                "s3fs"
-            ],
-            "env_vars": {
-                "AWS_ACCESS_KEY_ID": "minioadmin",
-                "AWS_SECRET_ACCESS_KEY": "minioadmin",
-                "AWS_ENDPOINT_URL": "https://minio.minio.svc.cluster.local:9000",
-                "AWS_S3_VERIFY_SSL": "false",
-                "S3_ENDPOINT_URL": "https://minio.minio.svc.cluster.local:9000"
-            }
-        }
-    )
+    ray.init()
 
     # Configure the trainer
     scaling_config = ScalingConfig(
         num_workers=2,  # Number of distributed training workers
-        use_gpu=False,  # Set to True if GPUs are available
+        use_gpu=True,  
         resources_per_worker={
             "CPU": 2,
-            "GPU": 0  # Change to 1 if using GPUs
+            "GPU": 1
         }
     )
 
