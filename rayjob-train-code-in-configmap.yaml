@@ -17,6 +17,8 @@ spec:
     env_vars:
       RAY_LOG_TO_STDERR: "1"
       RAY_TRAIN_WORKER_GROUP_START_TIMEOUT_S: "300"
+
+      # Replace Object Storage credentials and endpoint with your own
       AWS_ACCESS_KEY_ID: "minioadmin"
       AWS_SECRET_ACCESS_KEY: "minioadmin"
       AWS_ENDPOINT_URL: "http://minio.minio.svc.cluster.local:9000"
@@ -40,6 +42,7 @@ spec:
         spec:
           containers:
           - name: ray-head
+          #we specify a standard Ray image - no need to create our own
             image: rayproject/ray:2.51.1-py310
             imagePullPolicy: IfNotPresent
             ports:
@@ -53,11 +56,9 @@ spec:
               limits:
                 cpu: "2"
                 memory: "4Gi"
-                nvidia.com/gpu: "0"
               requests:
                 cpu: "2"
                 memory: "4Gi"
-                nvidia.com/gpu: "0"
             volumeMounts:
             - name: code
               mountPath: /app
@@ -78,6 +79,7 @@ spec:
         spec:
           containers:
           - name: ray-worker
+          #same version of the standard ray image but with CUDA
             image: rayproject/ray:2.51.1-py310-cu128
             imagePullPolicy: IfNotPresent
             resources:
